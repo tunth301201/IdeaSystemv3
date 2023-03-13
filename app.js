@@ -1,5 +1,7 @@
-const http = require('http');
+const express = require('express');
+const app = express();
 const mongoose = require('mongoose');
+const usersRoute = require('./routes/user.route');
 
 mongoose.connect('mongodb+srv://group1940:19401940@cluster0.txsa0qr.mongodb.net/IdeaSystem?retryWrites=true&w=majority', {
   useNewUrlParser: true,
@@ -9,14 +11,15 @@ mongoose.connect('mongodb+srv://group1940:19401940@cluster0.txsa0qr.mongodb.net/
 .catch((err) => console.log(err));
 
 
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello, world!');
-  });
-  
-  server.listen(4000, () => {
-    console.log('Server listening on port 4000');
-  });
+// Parse incoming JSON requests
+app.use(express.json());
 
+// Route middleware for users
+app.use('/users', usersRoute);
+
+
+// Start the server
+app.listen(3000, () => {
+  console.log('Server is listening on port 3000');
+});
   
