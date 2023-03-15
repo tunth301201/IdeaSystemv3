@@ -13,6 +13,17 @@ const getUsers = async (req, res) => {
     }
   };
 
+// Get one user
+const getOneUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 // Create a new user
 const createUser = async (req, res) => {
@@ -48,12 +59,12 @@ const createUser = async (req, res) => {
 
 
 // Update user
-  const updateUser = async (req, res, userId) => {
+  const updateUser = async (req, res) => {
     try {
       const { email, fullname, gender, image, password, department, permission } = req.body;
   
       // Check if user exists
-      const existingUser = await User.findById(userId);
+      const existingUser = await User.findById(req.params.id).exec();
       if (!existingUser) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -79,17 +90,10 @@ const createUser = async (req, res) => {
 
 
 // Delete a user by ID
-const deleteUser = async (req, res, userId) => {
+const deleteUser = async (req, res) => {
     try {
-      // Check if user exists
-      const existingUser = await User.findById(userId);
-      if (!existingUser) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      // Delete user from database
-      await existingUser.remove();
-  
+      const existingUser = await User.findOneAndDelete(req.params.id);
+ 
       res.json({ message: 'User deleted' });
     } catch (error) {
       console.error(error);
@@ -99,6 +103,7 @@ const deleteUser = async (req, res, userId) => {
 
 module.exports={
     getUsers: getUsers,
+    getOneUser: getOneUser,
     createUser: createUser,
     updateUser: updateUser,
     deleteUser: deleteUser
