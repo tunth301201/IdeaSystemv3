@@ -28,6 +28,10 @@ const getIdeas = async (req, res) => {
 const getOneIdea = async (req, res) => {
     try {
         const idea = await Idea.findById(req.params.id);
+
+        // increate view time
+        idea.view_time +=1;
+        await idea.save();
         
         const documents = idea.documents.map(doc => ({
             fileId: doc.fileId,
@@ -93,7 +97,7 @@ const updateIdea = async (req, res) => {
         await existingIdea.save();
 
         res.json(existingIdea);
-    } catch {
+    } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
