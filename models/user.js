@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
   },
   permission: {
     type: String,
-    enum: ['QAManager', 'QA', 'Staff', 'Admin'],
+    enum: ['QAManager', 'QA', 'Staff'],
     required: true
   }
 }, { timestamps: true });

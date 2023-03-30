@@ -1,4 +1,5 @@
 const UserIdea = require('../models/userIdea');
+const Idea = require('../models/idea');
 
 // Update rating
 const updateRating = async (req, res) => {
@@ -11,18 +12,30 @@ const updateRating = async (req, res) => {
 
         // If the rating record exists, update the rating
         if (existingRating) {
-        existingRating.rating = rating;
-        await existingRating.save();
-        res.status(200).json(existingRating);
+            existingRating.rating = rating;
+
+            let ratedIdea = await Idea.findById(idea_id);
+            ratedIdea.like = await UserIdea.count({rating: true});
+            ratedIdea.dislike = await UserIdea.count({rating: false});
+            await ratedIdea.save();
+
+            await existingRating.save();
+            res.status(200).json(existingRating);
         } else {
-        // Otherwise, create a new rating record
-        const newRating = new Rating({
-            user_id,
-            idea_id,
-            rating,
-        });
-        await newRating.save();
-        res.status(201).json(newRating);
+            // Otherwise, create a new rating record
+            const newRating = new Rating({
+                user_id,
+                idea_id,
+                rating,
+            });
+
+            let ratedIdea = await Idea.findById(idea_id);
+            ratedIdea.like = await UserIdea.count({rating: true});
+            ratedIdea.dislike = await UserIdea.count({rating: false});
+            await ratedIdea.save();
+
+            await newRating.save();
+            res.status(201).json(newRating);
         }
     
     } catch (error) {

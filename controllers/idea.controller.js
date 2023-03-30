@@ -118,10 +118,38 @@ const deleteIdea = async (req, res) => {
     }
 };
 
+// Get Most Popular Ideas
+const getMostPopularIdeas = async (req, res) => {
+
+};
+
+// Get Most Viewed Ideas
+const getMostViewdIdeas = async (req,res) =>{
+
+};
+
+// Get Latest Ideas
+const getLastestIdeas = async (req, res) => {
+
+};
+
+// Get total ideas of each department
+const getTotalIdeasOfEachDepartment = async (req, res) => {
+
+};
+
+// Get percentage ideas of each department
+const getPercentageIdeasOfEachDepartment = async (req, res) => {
+    
+}
+
 module.exports={
     getIdeas: getIdeas,
     getOneIdea: getOneIdea,
     createIdea: createIdea,
     updateIdea: updateIdea,
-    deleteIdea: deleteIdea
+    deleteIdea: deleteIdea,
+    // getMostPopularIdeas: getMostPopularIdeas,
+    // getMostViewdIdeas: getMostViewdIdeas,
+    // getLastestIdeas: getLastestIdeas
 }
