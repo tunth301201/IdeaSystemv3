@@ -4,6 +4,7 @@ const ideaController = require('../controllers/idea.controller');
 const mongoose = require('mongoose');
 const Grid = require('gridfs-stream');
 const { conn } = require('../config/db');
+const middleware=require('./../helpers/middleware');
 
 // UPLOAD file
 let gfs;
@@ -43,18 +44,18 @@ router.post('/upload', (req, res) => {
   });
 
 // POST /ideas
-router.post('/', ideaController.createIdea);
+router.post('/',middleware.auth, middleware.checkper("Staff"), ideaController.createIdea);
 
 // GET /ideas
-router.get('/', ideaController.getIdeas);
+router.get('/',middleware.auth, middleware.checkper("Staff"), ideaController.getIdeas);
 
 // GET /ideas/:id
-router.get('/:id', ideaController.getOneIdea);
+router.get('/:id',middleware.auth, middleware.checkper("Staff"), ideaController.getOneIdea);
 
 // PUT /ideas/:id
-router.put('/:id', ideaController.updateIdea);
+router.put('/:id',middleware.auth, middleware.checkper("Staff"), ideaController.updateIdea);
 
 // DELETE /users/:id
-router.delete('/:id', ideaController.deleteIdea);
+router.delete('/:id',middleware.auth, middleware.checkper("Staff"), ideaController.deleteIdea);
 
 module.exports = router;

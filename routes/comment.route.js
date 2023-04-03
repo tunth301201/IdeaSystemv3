@@ -3,7 +3,7 @@ const router = express.Router();
 const commentcontroller = require('../controllers/comment.controller');
 const middleware=require('./../helpers/middleware');
 // GET /tags
-router.get('/',middleware.auth, middleware.checkper("QAManager"), commentcontroller.getComment);
+router.get('/',middleware.auth, commentcontroller.getComment);
 //Create comment
 router.post('/:idea_id/comments/',middleware.auth, commentcontroller.createComment);
 //Create reply comment
