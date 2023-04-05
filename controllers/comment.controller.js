@@ -231,6 +231,15 @@ const replyComment = async (req, res) => {
 					message:'No comment found',
 					data:{}
 				});			
+			}else{
+				{
+					let current_user=req.user;
+					let usercomment=comment.reply;
+					if(current_user.user_id!=usercomment.user_id){
+						return res.status(400).send({
+							message:'Access denied',
+							data:{}
+						});	
 			}
 			else{	
 					try{
@@ -251,7 +260,9 @@ const replyComment = async (req, res) => {
 						  });
 					}		
 				}
-			})
+			}
+		}})
+			
 		}
 		const editreplyComment = async (req, res) => {
 			let comment_id=req.params.comment_id;
