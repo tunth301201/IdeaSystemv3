@@ -4,15 +4,15 @@ const userController = require('../controllers/user.controller');
 const middleware=require('./../helpers/middleware');
 
 // POST /users
-router.post('/',middleware.auth, userController.createUser);
+router.post('/', userController.createUser);
 
 // GET /users
-router.get('/',middleware.auth, userController.getUsers);
+router.get('/', userController.getUsers);
 
 // PUT /users/:id
-router.put('/:id',middleware.auth, userController.updateUser);
+router.put('/:id', userController.updateUser);
 
 // DELETE /users/:id
-router.delete('/:id',middleware.auth, userController.deleteUser);
+router.delete('/:id', userController.deleteUser);
 
 module.exports = router;

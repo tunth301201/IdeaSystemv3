@@ -18,17 +18,24 @@ const login =async (req, res)=>{
         if(bcrypt.compareSync(req.body.password, userData.password)){
             let jwt_secret=process.env.JWT_SECRET||'mysecret';
             let token=jwt.sign({
-                data: userData
+                data: {
+                    sub: userData._id,
+                    email: userData.email,
+                    permission: userData.permission,
+                }
             },jwt_secret, { expiresIn: '12h' });
             return res.status(200).send({
                 message:'Login',
-                data:userData,
+                data: {
+                    sub: userData._id,
+                    email: userData.email,
+                    permission: userData.permission,
+                },
                 token: token
             })
         }else{  
             return res.status(400).send({
             message:'Incorect',
-            data:userData,
         })
 
         }
@@ -36,7 +43,6 @@ const login =async (req, res)=>{
         }else{
             return res.status(400).send({
                 message:'User is not Register',
-                data:userData,
             })
         }
     }catch(err){
