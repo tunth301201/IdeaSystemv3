@@ -1,15 +1,6 @@
 const Idea = require('../models/Idea');
-const mongoose = require('mongoose');
-const { createReadStream } = require('fs');
-const { Types } = mongoose;
-const { ObjectId } = Types;
-
-
-const Grid = require('gridfs-stream');
-// const Grid = require('mongoose-gridfs')
-const formidable = require('formidable');
-const fs = require('fs');
-const { MongoClient, ObjectID } = require('mongodb');
+const Grid = require("gridfs-stream");
+const mongoose = require("mongoose");
 
 
 
@@ -17,180 +8,68 @@ const { MongoClient, ObjectID } = require('mongodb');
 // Get all ideas
 const getIdeas = async (req, res) => {
     try {
-        const ideas = await Idea.find();
-        const ideasWithDocs = ideas.map(idea => {
-            const documents = idea.documents.map(doc => ({
-              fileId: doc.fileId,
-              filename: doc.filename,
-              contentType: doc.contentType
-            }));
-            
+        const ideas = await Idea.find().sort({ createdAt: -1 }).populate('user_id', 'fullname').populate('tag_id', 'subject');
+        const shortIdeas = ideas.map(idea => {
             return {
-              ...idea.toObject(),
-              documents
+              _id: idea._id,
+              title: idea.title,
+              tag_name: idea.tag_id.subject,
+              content: getShortContent(idea.content),
+              createdAt: formatDateTimeDislay(idea.createdAt),
+              user_id: idea.user_id._id, // Lấy _id của user từ User Model
+              user_name: idea.user_id.fullname // Lấy user_name từ User Model
             };
           });
+
+          res.status(200).json(shortIdeas);
       
-        res.json(ideasWithDocs);
+       
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// Get ideas by UserID
+const getIdeasByUserID = async (req, res) => {
+    try {
+        const userID = req.params.id;
+        const ideas = await Idea.find({user_id:userID}).sort({ createdAt: -1 }).populate('user_id', 'fullname').populate('tag_id', 'subject');
+        const shortIdeas = ideas.map(idea => {
+            return {
+              _id: idea._id,
+              title: idea.title,
+              tag_name: idea.tag_id.subject,
+              content: getShortContent(idea.content),
+              createdAt: formatDateTimeDislay(idea.createdAt),
+              user_id: idea.user_id._id, // Lấy _id của user từ User Model
+              user_name: idea.user_id.fullname // Lấy user_name từ User Model
+            };
+          });
+
+          res.status(200).json(shortIdeas);
+      
+       
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+function getShortContent(text) {
+    var maxLength = Math.ceil(text.length * 2 / 3);
+    var truncatedText = text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+    return truncatedText;
+}
+
 
 // Get one idea
 const getOneIdea = async (req, res) => {
-    try {
-        const idea = await Idea.findById(req.params.id);
-
-        // increate view time
-        idea.view_time +=1;
-        await idea.save();
-        
-        const documents = idea.documents.map(doc => ({
-            fileId: doc.fileId,
-            filename: doc.filename,
-            contentType: doc.contentType
-          }));
-
-        const ideaWithDocs = {
-            ...idea.toObject(),
-            documents
-          };
-      
-        res.json(ideaWithDocs);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
 };
 
 // Create new idea
-// const createIdea = async (req, res) => {
-//     try {
-//         const { tag_id, user_id, title, content } = req.body;
-//         const files = req.files;
-//         console.log("files: "+files)
-//         if (!files) {
-//             console.log("No files");
-//             return res.status(400).json({ message: 'No files found in request' });
-            
-//         }
-
-//         // const conn = mongoose.createConnection('mongodb+srv://group1940:19401940@cluster0.txsa0qr.mongodb.net/IdeaSystem?retryWrites=true&w=majority');
-        
-     
-//         let gfs;
-//         gfs = Grid(conn.db, mongoose.mongo);
-//         gfs.collection('my_files');
-          
-//                 // Tạo Model GridFS
-             
-
-//                 let fileIds = []; // Mảng chứa _id của các file đã lưu
-
-//                 const saveFileToGridFS = async (file) => {
-//                     return new Promise((resolve, reject) => {
-//                         // Tạo stream từ file
-//                         // const fileStream = createReadStream(file.originalname);
-
-//                         // Lưu file vào GridFS
-//                         const writeStream = gfs.createWriteStream({
-//                             filename: file.filename,
-//                             metadata: {
-//                                 tag_id: new ObjectId(tag_id),
-//                                 user_id: new ObjectId(user_id),
-//                                 content: content
-//                             }
-//                         });
-
-//                         // fileStream.pipe(writeStream);
-
-//                         writeStream.on('close', async (file) => {
-//                             // Xoá file tạm trên disk
-//                             fs.unlinkSync(file.path);
-
-//                             // Lưu _id của file vào mảng fileIds
-//                             fileIds.push(file._id);
-
-//                             resolve();
-//                         });
-
-                     
-//                     });
-//                 };
-
-//                 // Lưu các file vào GridFS
-//                 await Promise.all(files.map(file => saveFileToGridFS(file)));
-
-//                 console.log('file ids : '+fileIds)
-
-//                 // Tạo idea mới trong MongoDB
-//                 const newIdea = new Idea({
-//                     tag_id: ObjectId(tag_id),
-//                     user_id: ObjectId(user_id),
-//                     title: title,
-//                     content: content,
-//                     documents: fileIds // Lưu mảng _id của các file trong Idea model
-//                 });
-//                 await newIdea.save();
-
-//                 // Đóng kết nối MongoDB
-//                 conn.close();
-
-//                 res.status(201).json({
-//                     message: 'Idea created successfully',
-//                     idea: newIdea
-//                 });
-
-           
-      
-       
-
-
-        
-
-//     } catch (error){
-//         console.error(error);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// };
-
 const createIdea = async (req, res) => {
-    // Kết nối đến MongoDB Atlas
-    mongoose.connect('mongodb+srv://group1940:19401940@cluster0.txsa0qr.mongodb.net/IdeaSystem?retryWrites=true&w=majority', { useNewUrlParser: true });
-
-    var conn = mongoose.connection;
-    // Tạo một luồng ghi dữ liệu vào GridFS
-    var gfs = new Grid(conn.db, mongoose.mongo);
-
-    const form = new formidable.IncomingForm();
-    form.parse(req, (err, fields, files) => {
-        if (err) {
-          console.error('Lỗi khi xử lý form data:', err);
-          res.status(500).json({ error: 'Lỗi khi xử lý form data' });
-          return;
-        }
-
-        const fileArray = Object.values(files);
-        console.log("lenght file array: "+fileArray.length)
-        let fileIds = [];
-
-        fileArray.forEach(file => {
-            const writeStream = gfs.createWriteStream(file);
-        });
-       
-      
-       
-    });
     
-        
-    
-
-
-       
-    
-
 }
 
 // Update idea
@@ -238,17 +117,105 @@ const deleteIdea = async (req, res) => {
 
 // Get Most Popular Ideas
 const getMostPopularIdeas = async (req, res) => {
+    try {
+        // Lấy tất cả các Idea từ database và populate user_id để lấy thông tin của User Model
+        const ideas = await Idea.find().populate('user_id', 'fullname');
+    
+        // Tính điểm (like - dislike) cho mỗi Idea
+        const ideasWithScores = ideas.map(idea => {
+          return {
+            _id: idea._id,
+            like: idea.like,
+            dislike: idea.dislike,
+            title: idea.title,
+            createdAt: formatDateTimeDislay(idea.createdAt),
+            user_id: idea.user_id._id, // Lấy _id của user từ User Model
+            user_name: idea.user_id.fullname // Lấy user_name từ User Model
+          };
+        });
+    
+        // Sắp xếp mảng ideasWithScores theo điểm giảm dần
+        ideasWithScores.sort((a, b) => (b.like - b.dislike) - (a.like - a.dislike));
+    
+        // Giới hạn danh sách ideasWithScores thành 6 phần tử
+        const mostPopularIdeas = ideasWithScores.slice(0, 6);
+    
+        // Trả về danh sách 6 Idea phổ biến nhất kèm theo thông tin user_name
+        res.status(200).json(mostPopularIdeas);
+      } catch (error) {
+        // Xử lý lỗi nếu có
+        res.status(500).json({ error: 'Error' });
+      }
 
 };
+
+function formatDateTimeDislay(inputString) {
+    // Convert input string to JavaScript Date object
+    var date = new Date(inputString);
+
+    // Extract individual components (year, month, day, hours, minutes, seconds) from the Date object
+    var year = date.getFullYear();
+    var month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are zero-indexed, so we add 1 and pad with leading zero
+    var day = ("0" + date.getDate()).slice(-2); // Pad with leading zero
+    var hours = ("0" + date.getHours()).slice(-2); // Pad with leading zero
+    var minutes = ("0" + date.getMinutes()).slice(-2); // Pad with leading zero
+    var seconds = ("0" + date.getSeconds()).slice(-2); // Pad with leading zero
+
+    // Format the date and time components into a user-friendly string
+    var formattedDateTime = day + "/" + month + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+
+    // Return the formatted date and time string
+    return formattedDateTime;
+}
 
 // Get Most Viewed Ideas
-const getMostViewdIdeas = async (req,res) =>{
+const getMostViewIdeas = async (req, res) => {
+    try {
+        const ideas = await Idea.find().populate('user_id', 'fullname'); 
+    
+        const mostViewedIdeas = ideas.map(idea => {
+            return {
+                _id: idea._id,
+                view_time: idea.view_time,
+                title: idea.title,
+                createdAt: formatDateTimeDislay(idea.createdAt),
+                user_id: idea.user_id._id,
+                user_name: idea.user_id.fullname
+            }
+        });
 
-};
+        mostViewedIdeas.sort((a, b) => b.view_time - a.view_time);
+
+        const mostViewIdeas = mostViewedIdeas.slice(0, 6);
+
+        res.status(200).json(mostViewIdeas);
+      } catch (error) {
+        // Xử lý lỗi nếu có
+        res.status(500).json({ error: 'Error' });
+      }
+  };
 
 // Get Latest Ideas
 const getLastestIdeas = async (req, res) => {
+    try {
+        
+        const ideas = await Idea.find().sort({ createdAt: -1 }).limit(6).populate('user_id', 'fullname');
+    
+        const lastdIdeas = ideas.map(idea => {
+            return {
+                _id: idea._id,
+                title: idea.title,
+                createdAt: formatDateTimeDislay(idea.createdAt),
+                user_id: idea.user_id._id,
+                user_name: idea.user_id.fullname
+            }
+        });
 
+        res.status(200).json(lastdIdeas);
+      } catch (error) {
+        // Xử lý lỗi nếu có
+        res.status(500).json({ error: 'Error' });
+      }
 };
 
 // Get total ideas of each department
@@ -267,7 +234,8 @@ module.exports={
     createIdea: createIdea,
     updateIdea: updateIdea,
     deleteIdea: deleteIdea,
-    // getMostPopularIdeas: getMostPopularIdeas,
-    // getMostViewdIdeas: getMostViewdIdeas,
-    // getLastestIdeas: getLastestIdeas
+    getMostPopularIdeas: getMostPopularIdeas,
+    getMostViewIdeas: getMostViewIdeas,
+    getLastestIdeas: getLastestIdeas,
+    getIdeasByUserID: getIdeasByUserID,
 }

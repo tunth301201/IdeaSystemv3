@@ -4,14 +4,46 @@ const Tag = require('../models/Tag');
 const getTags = async (req, res) => {
     try {
       // Retrieve all tags from database
-      const tags = await Tag.find();
+      const tags = await Tag.find().sort({ createdAt: -1 }).populate('user_id', 'fullname');
+      const tagDetail = tags.map(tag => {
+        return {
+          _id: tag._id,
+          subject: tag.subject,
+          description: tag.description,
+          start_dateOfTag: formatDateTimeDislay(tag.start_dateOfTag),
+          end_dateOfTag: formatDateTimeDislay(tag.end_dateOfTag),
+          end_dateOfIdea: formatDateTimeDislay(tag.end_dateOfIdea),
+          createdAt: formatDateTimeDislay(tag.createdAt),
+          user_id: tag.user_id._id,
+          user_name: tag.user_id.fullname,
+        }
+      });
   
-      res.json(tags);
+      res.json(tagDetail);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
     }
   };
+
+  function formatDateTimeDislay(inputString) {
+    // Convert input string to JavaScript Date object
+    var date = new Date(inputString);
+
+    // Extract individual components (year, month, day, hours, minutes, seconds) from the Date object
+    var year = date.getFullYear();
+    var month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are zero-indexed, so we add 1 and pad with leading zero
+    var day = ("0" + date.getDate()).slice(-2); // Pad with leading zero
+    var hours = ("0" + date.getHours()).slice(-2); // Pad with leading zero
+    var minutes = ("0" + date.getMinutes()).slice(-2); // Pad with leading zero
+    var seconds = ("0" + date.getSeconds()).slice(-2); // Pad with leading zero
+
+    // Format the date and time components into a user-friendly string
+    var formattedDateTime = day + "/" + month + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+
+    // Return the formatted date and time string
+    return formattedDateTime;
+}
   
 // Create a new tag
 const createTag = async (req, res) => {
@@ -49,6 +81,7 @@ const deleteTag = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 const getTag = async (req, res) => {
   try {
     const tag = await Tag.findById(req.params.id);

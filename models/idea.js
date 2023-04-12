@@ -36,7 +36,7 @@ try {
         type: Number,
         default: 0
     },
-    documents: [{
+    fileIds: [{
         type: mongoose.Types.ObjectId,
     }],
     comments: [{
@@ -46,7 +46,11 @@ try {
     view_time: {
         type: Number,
         default: 0
-    }
+    },
+    isAnonymity: {
+        type: Boolean,
+        default: false,
+      },
   },{timestamps: true});
   Idea = mongoose.model('Idea', ideaSchema);
 }
