@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const usersRoute = require('./routes/user.route');
 const ideasRoute = require('./routes/idea.route');
-const userIdeasRoute = require('./routes/userIdea.route');
 const tagsRoute = require('./routes/tag.route');
 const commentsRoute = require('./routes/comment.route');
 const authRoute = require('./routes/auth.route');
@@ -24,9 +23,6 @@ app.use('/users', usersRoute);
 
 // Route middleware for ideas
 app.use('/ideas', ideasRoute);
-
-// Route middleware for user-ideas
-app.use('/userIdeas', userIdeasRoute);
 
 // Route middleware for tags
 app.use('/tags', tagsRoute);
