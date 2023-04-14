@@ -105,7 +105,7 @@ const deleteUser = async (req, res, userId) => {
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(500).send({ error: 'Server error' });
     }
   };
   const getTotalUserDepartment = async (req, res) => {
@@ -117,7 +117,7 @@ const deleteUser = async (req, res, userId) => {
       res.send({ total: result });
     } catch (err) {
       console.error(err);
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(500).send({ error: 'Server error' });
     }
   };
   const getTotalIdeaByDepartment = async (req, res) => {
@@ -130,7 +130,7 @@ const deleteUser = async (req, res, userId) => {
       console.log(ideas)
     } catch (err) {
       console.error(err);
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(500).send({ error: 'Server error' });
     }
   };
   const getTotalIdeasToday = async (req, res) => {
@@ -147,18 +147,15 @@ const deleteUser = async (req, res, userId) => {
         },
         {
           $group: {
-            _id: '$author',
+            _id: null,
             count: { $sum: 1 }
           }
-        },
-        {
-          $count: 'total'
         }
       ]);
-      res.send({ total: result[0].total });
+      res.send({ total: result[0].count });
     } catch (err) {
       console.error(err);
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(500).send({ error: 'Server error' });
     }
   };
 module.exports={
