@@ -1,5 +1,5 @@
 const User = require('../models/User');
-
+const Idea= require('../models/Idea')
 // Get all users
 const getUsers = async (req, res) => {
     try {
@@ -97,9 +97,77 @@ const deleteUser = async (req, res, userId) => {
     }
   };
 
+  const getUserDepartment = async (req, res) => {
+    const department = req.params.department;
+  
+    try {
+      const users = await User.find({ department: department });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({ error: 'Internal server error' });
+    }
+  };
+  const getTotalUserDepartment = async (req, res) => {
+    const department = req.params.department;
+  
+    try {
+      const result = await User.countDocuments({ department: department });
+  
+      res.send({ total: result });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({ error: 'Internal server error' });
+    }
+  };
+  const getTotalIdeaByDepartment = async (req, res) => {
+    const department = req.params.department;
+    try {
+      const users = await User.find({ department: department });
+      const ideas = await Idea.find({ user_id: { $in: users.map(user => user._id) } });
+  
+      res.send({ total: ideas.length });
+      console.log(ideas)
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({ error: 'Internal server error' });
+    }
+  };
+  const getTotalIdeasToday = async (req, res) => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const result = await Idea.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(today),
+              $lt: new Date(today + 'T23:59:59.999Z')
+            }
+          }
+        },
+        {
+          $group: {
+            _id: '$author',
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $count: 'total'
+        }
+      ]);
+      res.send({ total: result[0].total });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({ error: 'Internal server error' });
+    }
+  };
 module.exports={
     getUsers: getUsers,
     createUser: createUser,
     updateUser: updateUser,
-    deleteUser: deleteUser
+    deleteUser: deleteUser,
+    getTotalUserDepartment:getTotalUserDepartment,
+    getUserDepartment:getUserDepartment,
+    getTotalIdeaByDepartment:getTotalIdeaByDepartment,
+    getTotalIdeasToday:getTotalIdeasToday,
 }

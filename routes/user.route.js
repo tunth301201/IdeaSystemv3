@@ -14,5 +14,12 @@ router.put('/:id', userController.updateUser);
 
 // DELETE /users/:id
 router.delete('/:id', userController.deleteUser);
-
+//get total user in department
+router.get('/getalluser/:department', userController.getTotalUserDepartment);
+//get user in department
+router.get('/users/:department', userController.getUserDepartment);
+//get total idea in department
+router.get('/idea/:department', userController.getTotalIdeaByDepartment);
+//get total user today
+router.get('/totaluser/', userController.getTotalIdeasToday);
 module.exports = router;
