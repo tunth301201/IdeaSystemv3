@@ -7,9 +7,9 @@ const Grid = require('gridfs-stream');
 const multer = require('multer');
 const {GridFsStorage} = require('multer-gridfs-storage'); 
 const crypto = require('crypto');
-const path = require('path');
 const conn = mongoose.connection;
-const methodOverride = require('method-override');
+
+
 
 // Khởi tạo GridFS
 let gfs;
@@ -77,12 +77,40 @@ router.get('/getMostViewIdeas',ideaController.getMostViewIdeas);
 
 router.get('/getLastIdeas',ideaController.getLastestIdeas);
 
-// GET /ideas/:id
+
+
+
+router.get('/files/download/:fileId', async (req, res) => {
+
+  const file = await gfs.files.findOne({ _id: new mongoose.Types.ObjectId(req.params.fileId) });
+  console.log(file);
+  
+  if (!file) {
+    return res.status(404).send('File not found');
+  } 
+
+  try {
+    const bucket = new mongoose.mongo.GridFSBucket(conn.db,{
+      bucketName: 'uploads'
+    });
+    const downloadStream = bucket.openDownloadStreamByName(file.filename);
+    
+    downloadStream.pipe(res);
+  }
+  catch (e) {
+    console.error(e);
+  }
+    
+});
+
+
+
+
 router.get('/:id', async (req, res) => {
   const idea = await Idea.findById(req.params.id).populate('user_id', 'fullname').populate('tag_id', 'subject');
 
   // increate view time
-  idea.view_time +=1;
+  // idea.view_time +=1;
   await idea.save();
 
   const fileIds = idea.fileIds;
@@ -97,11 +125,13 @@ router.get('/:id', async (req, res) => {
   const ideaDetail = {
     _id: idea._id,
     title: idea.title,
+    tag_id: idea.tag_id._id,
     tag_name: idea.tag_id.subject,
-    content: getShortContent(idea.content),
+    content: idea.content,
     createdAt: formatDateTimeDislay(idea.createdAt),
     user_id: idea.user_id._id, // Lấy _id của user từ User Model
     user_name: idea.user_id.fullname, // Lấy user_name từ User Model
+    isAnonymity: idea.isAnonymity,
     files: files,
     like: idea.like,
     dislike: idea.dislike,
@@ -111,11 +141,7 @@ router.get('/:id', async (req, res) => {
 
     
 });
-function getShortContent(text) {
-  var maxLength = Math.ceil(text.length * 2 / 3);
-  var truncatedText = text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
-  return truncatedText;
-}
+
 function formatDateTimeDislay(inputString) {
   // Convert input string to JavaScript Date object
   var date = new Date(inputString);
@@ -136,9 +162,135 @@ function formatDateTimeDislay(inputString) {
 }
 
 // PUT /ideas/:id
-router.put('/:id', ideaController.updateIdea);
+router.put('/:id', upload.array('files'), async (req, res) => {
+  try {
+    const existIdea = await Idea.findById(req.params.id);
+    if (!existIdea) {
+      return res.status(404).json({ message: 'Idea not found' });
+    }
+    
+      const { title, content, isAnonymity, restFileIds } = req.body;
+      const newFileIds = req.files.map(file => file.id);
+      console.log("Rest file ids: "+restFileIds);
+      console.log("New file ids: "+newFileIds);
+      var existFileIds = existIdea.fileIds || [];
+      if (restFileIds.length < existFileIds.length){
+        // delete exist files
+        const fileIdsNotInRest = existFileIds.filter(fileId => !restFileIds.includes(fileId));
+        await Promise.all(
+          fileIdsNotInRest.map(async (notRestId) => {
+            try {
+              const file = await gfs.files.findOne({ _id: notRestId});
+        
+              conn.db.collection('uploads.files').findOneAndDelete({ _id: file._id }, (err, result) => {
+                if (err) {
+                  console.error(err);
+                  return;
+                }
+            
+                if (!result.value) {
+                  console.error('File not found');
+                  return;
+                }
+            
+                conn.db.collection('uploads.chunks').deleteMany({ files_id: file._id }, (err) => {
+                  if (err) {
+                    console.error(err);
+                    return;
+                  }
+            
+                  console.log('File deleted successfully');
+                });
+              });
+    
+            } catch (error) {
+              console.error(`Error deleting file with ID ${notRestId}:`, error);
+            }
+          })
+        );
+        existFileIds = restFileIds;
+      } 
+      
+
+      if (newFileIds.length > 0){
+        existFileIds = [...existFileIds, ...newFileIds];
+      }
+      
+
+      
+
+      existIdea.title = title;
+      existIdea.content = content;
+      existIdea.isAnonymity = isAnonymity;
+       existIdea.fileIds = existFileIds;
+    
+      
+
+      await existIdea.save();
+      res.status(200).json({ message: 'Idea saved successfully' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  
+});
 
 // DELETE /users/:id
-router.delete('/:id', ideaController.deleteIdea);
+router.delete('/:id', async (req, res) => {
+  try {
+    const existingIdea = await Idea.findById(req.params.id);
+
+    const existFileIds = existingIdea.fileIds; // Filter out undefined or null values
+   
+    await Promise.all(
+      existFileIds.map(async (existFileId) => {
+        try {
+          const file = await gfs.files.findOne({ _id: existFileId });
+    
+          conn.db.collection('uploads.files').findOneAndDelete({ _id: file._id }, (err, result) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+        
+            if (!result.value) {
+              console.error('File not found');
+              return;
+            }
+        
+            conn.db.collection('uploads.chunks').deleteMany({ files_id: file._id }, (err) => {
+              if (err) {
+                console.error(err);
+                return;
+              }
+        
+              console.log('File deleted successfully');
+            });
+          });
+
+        } catch (error) {
+          console.error(`Error deleting file with ID ${existFileId}:`, error);
+        }
+      })
+    );
+
+    await Idea.findByIdAndDelete(req.params.id);
+
+    if (!existingIdea) {
+        return res.status(404).json({ message: 'Idea not found' });
+    }
+
+    res.json({ message: 'Idea deleted' });
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+}
+});
+
+router.put('/updateViewTime/:id', async (req, res) => {
+  const findIdea = await Idea.findById(req.params.id);
+  findIdea.view_time = findIdea.view_time +1;
+  findIdea.save();
+  res.json(findIdea);
+})
 
 module.exports = router;

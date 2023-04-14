@@ -64,56 +64,16 @@ function getShortContent(text) {
 
 
 // Get one idea
-const getOneIdea = async (req, res) => {
-};
+const getOneIdea = async (req, res) => {};
 
 // Create new idea
-const createIdea = async (req, res) => {
-    
-}
+const createIdea = async (req, res) => {}
 
 // Update idea
-const updateIdea = async (req, res) => {
-    try {
-        const { tag_id, title, content } = req.body;
-        const documents = req.files.map(file => file.id);
-
-        // Check if idea exists
-        const existingIdea = await Idea.findById(req.params.id);
-        if (!existingIdea) {
-            return res.status(404).json({ message: 'Idea not found' });
-        }
-
-        // Update idea object
-        existingIdea.tag_id = tag_id;
-        existingIdea.title = title;
-        existingIdea.content = content;
-        existingIdea.documents = documents;
-
-        // Save updated idea to db
-        await existingIdea.save();
-
-        res.json(existingIdea);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+const updateIdea = async (req, res) => {};
 
 // Delete idea by ID
-const deleteIdea = async (req, res) => {
-    try {
-        const existingIdea = await Idea.findByIdAndDelete(req.params.id);
-        if (!existingIdea) {
-            return res.status(404).json({ message: 'Idea not found' });
-        }
-
-        res.json({ message: 'Idea deleted' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+const deleteIdea = async (req, res) => {};
 
 // Get Most Popular Ideas
 const getMostPopularIdeas = async (req, res) => {
@@ -219,14 +179,10 @@ const getLastestIdeas = async (req, res) => {
 };
 
 // Get total ideas of each department
-const getTotalIdeasOfEachDepartment = async (req, res) => {
-
-};
+const getTotalIdeasOfEachDepartment = async (req, res) => {};
 
 // Get percentage ideas of each department
-const getPercentageIdeasOfEachDepartment = async (req, res) => {
-    
-}
+const getPercentageIdeasOfEachDepartment = async (req, res) => {}
 
 module.exports={
     getIdeas: getIdeas,

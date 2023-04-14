@@ -26,11 +26,6 @@ const login =async (req, res)=>{
             },jwt_secret, { expiresIn: '12h' });
             return res.status(200).send({
                 message:'Login',
-                data: {
-                    sub: userData._id,
-                    email: userData.email,
-                    permission: userData.permission,
-                },
                 token: token
             })
         }else{  

@@ -1,43 +1,32 @@
 const mongoose = require('mongoose');
 
-const commentSchema = new mongoose.Schema({
-  user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    trim: true
-  },
-  isAnonymity: {
-    type: Boolean,
-    default: false,
-  },
-  comment: {
-    type: String,
-    required: true,
-  },
-  idea_id:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Idea'
-  },
-  reply: [{
-    user_id:{
+let Comment;
+try {
+  Comment = mongoose.model('Comment');
+} catch (error) {
+  const commentSchema = new mongoose.Schema({
+    user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref:'User',
+      ref: 'User',
       required: true,
+      trim: true
     },
-    replycomment:{
+    isAnonymity: {
+      type: Boolean,
+      default: false,
+    },
+    comment: {
       type: String,
       required: true,
     },
-    isAnonymityReply:{
-      type: Boolean,
-      required: true,
-      default: false,
+    idea_id:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Idea'
     }
-}]
+  }, { timestamps: true });
   
-}, { timestamps: true });
+  Comment = mongoose.model('Comment', commentSchema);
+}
 
-const Comment = mongoose.model('Comment', commentSchema);
 
 module.exports = Comment;

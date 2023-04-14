@@ -6,6 +6,8 @@ const userIdeasRoute = require('./routes/userIdea.route');
 const tagsRoute = require('./routes/tag.route');
 const commentsRoute = require('./routes/comment.route');
 const authRoute = require('./routes/auth.route');
+const emotionRoute = require('./routes/emotion.route');
+const notificationRoute = require('./routes/notification.route');
 const { conn } = require('./config/db');
 const cors = require('cors');
 
@@ -31,6 +33,9 @@ app.use('/tags', tagsRoute);
 
 app.use('/comments', commentsRoute);
 app.use('/auth', authRoute);
+
+app.use('/emotion', emotionRoute);
+app.use('/notifications', notificationRoute);
 
 // Start the server
 conn.once('open', () => {

@@ -41,7 +41,7 @@ try {
     }],
     comments: [{
         type: mongoose.Types.ObjectId,
-        ref: 'Comment'
+        ref: 'Comment',
     }],
     view_time: {
         type: Number,

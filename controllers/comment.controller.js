@@ -5,8 +5,11 @@ const Idea = require('../models/Idea');
 // Get all comments
 const getComment = async (req, res) => {
     try {
-      // Retrieve all comments from database
-      const comments = await Comment.find();
+		const ideaId = req.params.idea_id;
+      const comments = await Comment
+	  		.find({idea_id: ideaId})	
+			.sort({ createdAt: -1 })
+			.populate('user_id', 'fullname')
       res.json(comments);
     } catch (error) {
       console.error(error);
@@ -16,6 +19,8 @@ const getComment = async (req, res) => {
  // Create a new comment  
 const createComment = async (req, res) => {
   let idea_id=req.params.idea_id;
+
+
 	if(!mongoose.Types.ObjectId.isValid(idea_id)){
 		return res.status(400).send({
 	  		message:'Invalid idea id',
@@ -29,6 +34,8 @@ const createComment = async (req, res) => {
 				data:{}
 			});	
 		}else{
+
+
 			try{
 				const v = new Validator(req.body, {
 					comment:'required',
@@ -37,10 +44,12 @@ const createComment = async (req, res) => {
 				if (!matched) {
 					return res.status(422).send(v.errors);
 				}
+
 				let newCommentDocument= new Comment({
 					comment:req.body.comment,
+					isAnonymity: req.body.isAnonymity,
 					idea_id:idea_id,
-					user_id:req.user._id
+					user_id:req.body.user_id,
 				});
 				let commentData=await newCommentDocument.save();
 
@@ -85,13 +94,6 @@ const deleteComment =(req, res) => {
 				data:{}
 			});	
 		}else{
-			let current_user=req.user;
-			if(comment.user_id!=current_user._id){
-				return res.status(400).send({
-					message:'Access denied',
-					data:{}
-				});	
-			}else{
 				try{
 					await Comment.deleteOne({_id:comment_id})
 					await Idea.updateOne(
@@ -111,7 +113,7 @@ const deleteComment =(req, res) => {
 				  		data:err
 				  	});
 				}
-			}
+			// }
 		}
 	}).catch((err)=>{
 		return res.status(400).send({
@@ -176,6 +178,8 @@ const deleteComment =(req, res) => {
 	})
 }
 const replyComment = async (req, res) => {
+	
+
 	let comment_id=req.params.comment_id;
 	if(!mongoose.Types.ObjectId.isValid(comment_id)){
 		return res.status(400).send({
@@ -186,6 +190,12 @@ const replyComment = async (req, res) => {
 
 	Comment.findOne({_id:comment_id}).then(async (comment)=>{
 		if(!comment){
+			console.log(comment)
+
+
+
+
+
 			return res.status(400).send({
 				message:'No comment found',
 				data:{}
@@ -194,7 +204,7 @@ const replyComment = async (req, res) => {
 				try{
 					await Comment.updateOne({_id:comment_id},{
 						$push:{
-							"reply":{user_id:req.user._id,replycomment:req.body.replycomment,isAnonymityReply:req.body.isAnonymityReply}
+							"reply":{user_id:req.body.user_id,replycomment:req.body.replycomment,isAnonymityReply:req.body.isAnonymityReply}
 						}
 					});
 					return res.status(200).send({
@@ -320,6 +330,7 @@ const replyComment = async (req, res) => {
 				}
 				})
 			}
+
 module.exports={
     getComment:getComment,
     createComment:createComment,
