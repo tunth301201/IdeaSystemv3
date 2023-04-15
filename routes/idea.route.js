@@ -8,6 +8,7 @@ const multer = require('multer');
 const {GridFsStorage} = require('multer-gridfs-storage'); 
 const crypto = require('crypto');
 const conn = mongoose.connection;
+const middleware=require('./../helpers/middleware');
 
 
 
@@ -58,7 +59,7 @@ router.post('/', upload.array('files'), async (req, res) => {
         });
     
         await newIdea.save();
-        res.status(200).json({ message: 'Idea saved successfully' });
+        res.status(200).json(newIdea);
       } catch (error) {
         res.status(500).json({ error: error.message });
       }
@@ -67,15 +68,15 @@ router.post('/', upload.array('files'), async (req, res) => {
 
 
 // GET /ideas
-router.get('/',ideaController.getIdeas);
+router.get('/', ideaController.getIdeas);
 
 router.get('/profile/:id', ideaController.getIdeasByUserID);
 
-router.get('/getMostPopularIdeas',ideaController.getMostPopularIdeas);
+router.get('/getMostPopularIdeas', ideaController.getMostPopularIdeas);
 
-router.get('/getMostViewIdeas',ideaController.getMostViewIdeas);
+router.get('/getMostViewIdeas', ideaController.getMostViewIdeas);
 
-router.get('/getLastIdeas',ideaController.getLastestIdeas);
+router.get('/getLastIdeas', ideaController.getLastestIdeas);
 
 
 
@@ -102,16 +103,12 @@ router.get('/files/download/:fileId', async (req, res) => {
   }
     
 });
+ 
 
-
-
+router.get('/ideasByTag/:tagId', ideaController.getIdeasByTagId);
 
 router.get('/:id', async (req, res) => {
-  const idea = await Idea.findById(req.params.id).populate('user_id', 'fullname').populate('tag_id', 'subject');
-
-  // increate view time
-  // idea.view_time +=1;
-  await idea.save();
+  const idea = await Idea.findById(req.params.id).populate('user_id').populate('tag_id');
 
   const fileIds = idea.fileIds;
 
@@ -123,18 +120,8 @@ router.get('/:id', async (req, res) => {
   );
 
   const ideaDetail = {
-    _id: idea._id,
-    title: idea.title,
-    tag_id: idea.tag_id._id,
-    tag_name: idea.tag_id.subject,
-    content: idea.content,
-    createdAt: formatDateTimeDislay(idea.createdAt),
-    user_id: idea.user_id._id, // Lấy _id của user từ User Model
-    user_name: idea.user_id.fullname, // Lấy user_name từ User Model
-    isAnonymity: idea.isAnonymity,
+    idea,
     files: files,
-    like: idea.like,
-    dislike: idea.dislike,
   };
 
   res.json (ideaDetail);
@@ -142,24 +129,6 @@ router.get('/:id', async (req, res) => {
     
 });
 
-function formatDateTimeDislay(inputString) {
-  // Convert input string to JavaScript Date object
-  var date = new Date(inputString);
-
-  // Extract individual components (year, month, day, hours, minutes, seconds) from the Date object
-  var year = date.getFullYear();
-  var month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are zero-indexed, so we add 1 and pad with leading zero
-  var day = ("0" + date.getDate()).slice(-2); // Pad with leading zero
-  var hours = ("0" + date.getHours()).slice(-2); // Pad with leading zero
-  var minutes = ("0" + date.getMinutes()).slice(-2); // Pad with leading zero
-  var seconds = ("0" + date.getSeconds()).slice(-2); // Pad with leading zero
-
-  // Format the date and time components into a user-friendly string
-  var formattedDateTime = day + "/" + month + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
-
-  // Return the formatted date and time string
-  return formattedDateTime;
-}
 
 // PUT /ideas/:id
 router.put('/:id', upload.array('files'), async (req, res) => {
@@ -170,6 +139,7 @@ router.put('/:id', upload.array('files'), async (req, res) => {
     }
     
       const { title, content, isAnonymity, restFileIds } = req.body;
+      console.log(title);
       const newFileIds = req.files.map(file => file.id);
       console.log("Rest file ids: "+restFileIds);
       console.log("New file ids: "+newFileIds);

@@ -6,9 +6,9 @@ const getNotifications = async (req, res) => {
         const notifications = await Notification
                     .find({user_id: userId})
                     .sort({ createdAt: -1 })
-                    .populate('user_id', 'fullname')
-                    .populate('other_user_id', 'fullname')
-                    .populate('idea_id', 'title');
+                    .populate('user_id')
+                    .populate('other_user_id')
+                    .populate('idea_id');
                 
         
         res.json(notifications);
@@ -20,8 +20,11 @@ const getNotifications = async (req, res) => {
 
 const createNotification = async (req, res) => {
     try {
-        const {user_id, other_user_id, type} = req.body;
+       console.log(req.query)
         const idea_id = req.params.ideaId;
+        const user_id = req.body.userId;
+        const other_user_id = req.body.otherUserId;
+        const type = req.body.type;
 
         const newNotification = new Notification({
             user_id: user_id,

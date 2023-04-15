@@ -13,6 +13,20 @@ const getUsers = async (req, res) => {
     }
   };
 
+  const  getUserById = async (req, res) => {
+    const userId = req.params.userId;
+    try {
+      // Retrieve all users from database
+      const users = await User.findById(userId);
+  
+      res.json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+ 
+
 
 // Create a new user
 const createUser = async (req, res) => {
@@ -48,12 +62,12 @@ const createUser = async (req, res) => {
 
 
 // Update user
-  const updateUser = async (req, res, userId) => {
+  const updateUser = async (req, res) => {
     try {
       const { email, fullname, gender, image, password, department, permission } = req.body;
   
       // Check if user exists
-      const existingUser = await User.findById(userId);
+      const existingUser = await User.findById(req.params.id).exec();
       if (!existingUser) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -79,26 +93,23 @@ const createUser = async (req, res) => {
 
 
 // Delete a user by ID
-const deleteUser = async (req, res, userId) => {
-    try {
-      // Check if user exists
-      const existingUser = await User.findById(userId);
-      if (!existingUser) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      // Delete user from database
-      await existingUser.remove();
-  
-      res.json({ message: 'User deleted' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
+const deleteUser = async (req, res) => {
+  try {
+    // Check if user exists
+    const existingUser = await User.findByIdAndDelete(req.params.id).exec();
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    res.json({ message: 'User deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
   };
 
   const getUserDepartment = async (req, res) => {
-    const department = req.params.department;
+    const department = req.params.department; 
   
     try {
       const users = await User.find({ department: department });
@@ -134,11 +145,16 @@ const deleteUser = async (req, res, userId) => {
     }
   };
   const getTotalIdeasToday = async (req, res) => {
+    const department = req.params.department;
     try {
       const today = new Date().toISOString().slice(0, 10);
+      const users = await User.find({ department: department });
+      const userIds = users.map(user => user._id);
+
       const result = await Idea.aggregate([
         {
           $match: {
+            user_id: { $in: userIds },
             createdAt: {
               $gte: new Date(today),
               $lt: new Date(today + 'T23:59:59.999Z')
@@ -160,6 +176,7 @@ const deleteUser = async (req, res, userId) => {
   };
 module.exports={
     getUsers: getUsers,
+    getUserById: getUserById,
     createUser: createUser,
     updateUser: updateUser,
     deleteUser: deleteUser,

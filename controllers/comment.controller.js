@@ -9,7 +9,7 @@ const getComment = async (req, res) => {
       const comments = await Comment
 	  		.find({idea_id: ideaId})	
 			.sort({ createdAt: -1 })
-			.populate('user_id', 'fullname')
+			.populate('user_id')
       res.json(comments);
     } catch (error) {
       console.error(error);
@@ -47,7 +47,7 @@ const createComment = async (req, res) => {
 
 				let newCommentDocument= new Comment({
 					comment:req.body.comment,
-					isAnonymity: req.body.isAnonymity,
+					isAnonymity: req.body.isAnonymous,
 					idea_id:idea_id,
 					user_id:req.body.user_id,
 				});

@@ -4,22 +4,9 @@ const Tag = require('../models/Tag');
 const getTags = async (req, res) => {
     try {
       // Retrieve all tags from database
-      const tags = await Tag.find().sort({ createdAt: -1 }).populate('user_id', 'fullname');
-      const tagDetail = tags.map(tag => {
-        return {
-          _id: tag._id,
-          subject: tag.subject,
-          description: tag.description,
-          start_dateOfTag: formatDateTimeDislay(tag.start_dateOfTag),
-          end_dateOfTag: formatDateTimeDislay(tag.end_dateOfTag),
-          end_dateOfIdea: formatDateTimeDislay(tag.end_dateOfIdea),
-          createdAt: formatDateTimeDislay(tag.createdAt),
-          user_id: tag.user_id._id,
-          user_name: tag.user_id.fullname,
-        }
-      });
+      const tags = await Tag.find().sort({ createdAt: -1 }).populate('user_id');
   
-      res.json(tagDetail);
+      res.json(tags);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
