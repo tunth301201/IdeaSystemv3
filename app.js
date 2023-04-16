@@ -12,7 +12,7 @@ const cors = require('cors');
 
 // enable cors to allow access from other server
 app.use(cors({
-  origin: 'http://localhost:4000'
+  origin: 'http://localhost:3000'
 }));
 
 // Parse incoming JSON requests

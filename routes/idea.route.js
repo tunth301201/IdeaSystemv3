@@ -108,7 +108,8 @@ router.get('/files/download/:fileId', async (req, res) => {
 router.get('/ideasByTag/:tagId', ideaController.getIdeasByTagId);
 
 router.get('/:id', async (req, res) => {
-  const idea = await Idea.findById(req.params.id).populate('user_id').populate('tag_id');
+  const id = req.params.id
+  const idea = await Idea.findById(id).populate('user_id').populate('tag_id');
 
   const fileIds = idea.fileIds;
 
